@@ -9,7 +9,7 @@ import usersRouter from './routes/users.js';
 import express from 'express';
 import cors from 'cors';
 const app = express();
-const PORT =`0.0.0.0:$PORT`;
+const PORT = process.env.PORT;
 // app.use('/', indexRouter);
 
 app.use(cors());

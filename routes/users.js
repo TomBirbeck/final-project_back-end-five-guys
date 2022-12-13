@@ -49,87 +49,161 @@ const router = express.Router();
 
 /* GET users listing. */
 router.get('/', function (req, res, next) {
-  res.send('Home page not in use');
+  try {
+    res.send('Home page not in use');
+  } catch (error) {
+    res.status(404)
+    res.json({success: false, message: 'error 404 page not found'})
+  }
+  next()
 });
 router.post('/otc/:email', async function (req, res, next) {
-  const response = await registerOTC(req.params.email, req.body);
-  res.json({ success: true, data: response });
+  try {
+    const response = await registerOTC(req.params.email, req.body);
+    res.json({ success: true, data: response });
+  } catch (error) {
+    res.status(400)
+    res.json({success: false, message: 'error accessing over the counter medicine list'})
+  }
+  next()
 });
 router.get('/otc', async function (req, res, next) {
-  if (req.query.id) {
-    const response = await getOTCForDoctor(Number(req.query.id));
-    return res.json({ success: true, data: response });
+  try {
+    if (req.query.id) {
+      const response = await getOTCForDoctor(Number(req.query.id));
+      return res.json({ success: true, data: response });
+    }
+    const response2 = await getOTCForPatient(req.query.email);
+    res.json({ success: true, data: response2 });
+  } catch (error) {
+    res.status(400)
+    res.json({success: false, message: 'error getting over the counter list'})
   }
-  const response2 = await getOTCForPatient(req.query.email);
-  res.json({ success: true, data: response2 });
+  next()
 });
 router.get('/diary/:id', async function (req, res, next) {
-  if (req.params.id) {
-    const response = await getDiaryById(Number(req.params.id));
-    return res.json({ success: true, data: response });
+  try {
+    if (req.params.id) {
+      const response = await getDiaryById(Number(req.params.id));
+      return res.json({ success: true, data: response });
+    }
+    const response = await getDiary();
+    res.json({ success: true, data: response });
+  } catch (error) {
+    res.status(400)
+    res.json({success: false, message: 'error accesssing diary'})
   }
-  const response = await getDiary();
-  res.json({ success: true, data: response });
+  next()
 });
 
 //get all diary entries for a specific patient
 router.get('/diary', async function (req, res, next) {
-  if (req.query.email) {
-    const response = await getDiaryByEmail(req.query.email);
-    return res.json({ success: true, data: response });
+  try {
+    if (req.query.email) {
+      const response = await getDiaryByEmail(req.query.email);
+      return res.json({ success: true, data: response });
+    }
+    res.json({ success: false, data: 'provide email please' });
+  } catch (error) {
+    res.status(400)
+    res.json({success: false, message: 'error accessing diary for patient'})
   }
-  res.json({ success: false, data: 'provide email please' });
+  next()
 });
 
 // add diary entry for patient
 router.post('/diary/:email', async function (req, res, next) {
-  const response = await newDiaryEntry(req.params.email, req.body);
-  return res.json({ success: true, data: response });
+  try {
+    const response = await newDiaryEntry(req.params.email, req.body);
+    return res.json({ success: true, data: response });
+  } catch (error) {
+    res.status(400)
+    res.json({success: false, message: 'error adding diary entry'})
+  }
+  next()
 });
 
 //route to get allergies for patient by searching their email
 router.get('/allergy/', async function (req, res, next) {
-  if (req.query.email !== undefined) {
-    const response = await getAllergiesByEmail(req.query.email);
-    return res.json({ success: true, data: response });
+  try {
+    if (req.query.email !== undefined) {
+      const response = await getAllergiesByEmail(req.query.email);
+      return res.json({ success: true, data: response });
+    }
+  } catch (error) {
+    res.status(400)
+    res.json({success: false, message: 'error accessing allergies for patient by email'})
   }
+  next()
 });
 
 router.get('/allergy/:id', async function (req, res, next) {
-  if (req.params.id) {
-    console.log('id given for allergies');
-    const response = await getAllergiesById(Number(req.params.id));
-    return res.json({ success: true, data: response });
+  try {
+    if (req.params.id) {
+      console.log('id given for allergies');
+      const response = await getAllergiesById(Number(req.params.id));
+      return res.json({ success: true, data: response });
+    }
+    const response = await getAllergies();
+    res.json({ success: true, data: response });
+  } catch (error) {
+    res.status(400)
+    res.json({success: false, message: 'error accessing allergies for patient by id'})
   }
-  const response = await getAllergies();
-  res.json({ success: true, data: response });
+  next()
 });
 
 //add allergy for patient
 router.post('/allergy/:email', async function (req, res, next) {
-  const response = await makeAllergy(req.params.email, req.body);
-  return res.json({ success: true, data: response });
+  try {
+    const response = await makeAllergy(req.params.email, req.body);
+    return res.json({ success: true, data: response });
+  } catch (error) {
+    res.status(400)
+    res.json({success: false, message: 'error posting new allergy for patient'})
+  }
+  next()
 });
 
 router.get('/signup', async function (req, res, next) {
-  if (req.query.code) {
-    const response = await linkSignUp(req.query.code);
-    return res.json({ success: true, data: response });
+  try {
+    if (req.query.code) {
+      const response = await linkSignUp(req.query.code);
+      return res.json({ success: true, data: response });
+    }
+    const response = await getSignUps();
+    res.json({ success: true, data: response });
+  } catch (error) {
+    res.status(400)
+    res.json({success: false, message: 'error with signup'})
   }
-  const response = await getSignUps();
-  res.json({ success: true, data: response });
+  next()
 });
+
 router.get('/signup/patient/:id', async function (req, res, next) {
-  const response = await getCode(Number(req.params.id));
-  return res.json({ success: true, data: response });
-});
-router.put('/signup', async function (req, res, next) {
-  if (req.query.code) {
-    const response = await useSignUp(req.query.code);
+  try {
+    const response = await getCode(Number(req.params.id));
     return res.json({ success: true, data: response });
+  } catch (error) {
+    res.status(400)
+    res.json({success: false, message: 'error accessing signup code for patient'})
   }
-  const response = await getSignUps();
-  res.json({ success: true, data: response });
+  next()
+});
+
+router.put('/signup', async function (req, res, next) {
+  try {
+    if (req.query.code) {
+      const response = await useSignUp(req.query.code);
+      return res.json({ success: true, data: response });
+    }
+    const response = await getSignUps();
+    res.json({ success: true, data: response });
+  } catch (error) {
+    res.status(400)
+    res.json({success: false, message: 'error with signup'})
+  }
+  next()
 });
 router.get('/doctor', async function (req, res, next) {
   if (req.query.email) {

@@ -205,99 +205,173 @@ router.put('/signup', async function (req, res, next) {
   }
   next()
 });
-router.get('/doctor', async function (req, res, next) {
-  if (req.query.email) {
-    const response = await getDoctorByEmail(req.query.email);
-    return res.json({ success: true, data: response });
-  }
 
-  res.json({ success: false, data: 'no email provided' });
+router.get('/doctor', async function (req, res, next) {
+  try {
+    if (req.query.email) {
+      const response = await getDoctorByEmail(req.query.email);
+      return res.json({ success: true, data: response });
+    }
+  
+    res.json({ success: false, data: 'no email provided' });
+    
+  } catch (error) {
+    res.status(400)
+    res.json({success: false, message: 'error accessing doctor by email'})
+  }
+  next()
 });
+
 router.get('/patients', async function (req, res, next) {
-  if (req.query.doctoremail !== undefined) {
-    console.log('doc email provided');
-    const response = await getPatientsByDoctor(req.query.doctoremail);
-    return res.json({ success: true, data: response });
+  try {
+    if (req.query.doctoremail !== undefined) {
+      console.log('doc email provided');
+      const response = await getPatientsByDoctor(req.query.doctoremail);
+      return res.json({ success: true, data: response });
+    }
+    const response = await getPatients();
+    res.json({ success: true, data: response });
+  } catch (error) {
+    res.status(400)
+    res.json({success: false, message: 'error accessing patiets for doctor using email'})
   }
-  const response = await getPatients();
-  res.json({ success: true, data: response });
+  next()
 });
+
 router.put('/patients', async function (req, res, next) {
-  if (req.query.id !== undefined && req.query.email !== undefined) {
-    const response = await linkPatient(req.query.email, Number(req.query.id));
-    return res.json({ success: true, data: response });
+  try {
+    if (req.query.id !== undefined && req.query.email !== undefined) {
+      const response = await linkPatient(req.query.email, Number(req.query.id));
+      return res.json({ success: true, data: response });
+    }
+    res.json({ success: false, data: 'not a valid ID' });
+  } catch (error) {
+    res.status(400)
+    res.json({success: false, message: 'error linking patient'})
   }
-  res.json({ success: false, data: 'not a valid ID' });
+  next()
 });
 
 router.post('/patients', async function (req, res, next) {
-  if (req.query.doctoremail) {
-    console.log('email given for post for new patient');
-    const newPatient = await createPatient(req.body);
-    console.log('new pat', newPatient);
-    let registerID = uuidv4().split('-')[0];
-    const signUp = await newSignUp(registerID, newPatient[0].patient_id);
-    console.log('sign up', signUp);
-    const doctorID = await getDoctorByEmail(req.query.doctoremail);
-    console.log(doctorID);
-    const addedPatient = await addPatientToDoctorList(
-      doctorID[0].doctor_id,
-      newPatient[0].patient_id
-    );
-    return res.json({
-      success: true,
-      doc: addedPatient,
-      patient: newPatient,
-      registrationID: signUp,
-    });
+  try {
+    
+    if (req.query.doctoremail) {
+      console.log('email given for post for new patient');
+      const newPatient = await createPatient(req.body);
+      console.log('new pat', newPatient);
+      let registerID = uuidv4().split('-')[0];
+      const signUp = await newSignUp(registerID, newPatient[0].patient_id);
+      console.log('sign up', signUp);
+      const doctorID = await getDoctorByEmail(req.query.doctoremail);
+      console.log(doctorID);
+      const addedPatient = await addPatientToDoctorList(
+        doctorID[0].doctor_id,
+        newPatient[0].patient_id
+      );
+      return res.json({
+        success: true,
+        doc: addedPatient,
+        patient: newPatient,
+        registrationID: signUp,
+      });
+    }
+    res.json({ success: false, data: {} });
+  } catch (error) {
+    res.status(400)
+    res.json({success: false, message: 'error posting new patient'})
   }
-  res.json({ success: false, data: {} });
+  next()
 });
-router.get('/prescriptions/:id', async function (req, res, next) {
-  console.log('ID PARAM ROUTE');
-  const response = await getPrescriptionsById(Number(req.params.id));
-  res.json({ success: true, data: response });
-});
-router.get('/prescriptions', async function (req, res, next) {
-  console.log('EMAIL Q ROUTE');
 
-  if (req.query.email) {
-    const response = await getPrescriptionsByEmail(req.query.email);
-    console.log('getting pres', response);
-    return res.json({ success: true, data: response });
+router.get('/prescriptions/:id', async function (req, res, next) {
+  try {
+    console.log('ID PARAM ROUTE');
+    const response = await getPrescriptionsById(Number(req.params.id));
+    res.json({ success: true, data: response });
+  } catch (error) {
+    res.status(400)
+    res.json({success: false, message: 'error accessing prescriptions for patient by id'})
   }
-  res.json({ success: false, data: {} });
+  next()
 });
+
+router.get('/prescriptions', async function (req, res, next) {
+  try {
+    console.log('EMAIL Q ROUTE');
+  
+    if (req.query.email) {
+      const response = await getPrescriptionsByEmail(req.query.email);
+      console.log('getting pres', response);
+      return res.json({ success: true, data: response });
+    }
+    res.json({ success: false, data: {} });
+  } catch (error) {
+    res.status(400)
+    res.json({success: false, message: 'error accessing prescriptions for patient by email'})
+  }
+  next()
+});
+
 router.post('/prescriptions/:id', async function (req, res, next) {
-  console.log('posting prescription', req.body);
-  const response = await makePrescription(Number(req.params.id), req.body);
-  res.json({ success: true, data: response });
+  try {
+    console.log('posting prescription', req.body);
+    const response = await makePrescription(Number(req.params.id), req.body);
+    res.json({ success: true, data: response });
+  } catch (error) {
+    res.status(400)
+    res.json({success: false, message: 'error posting new prescription for patient using id'})
+  }
+  next()
 });
 
 router.get('/patient', async function (req, res, next) {
-  if (req.query.email) {
-    const response = await getPatientByEmail(req.query.email);
-    return res.json({ success: true, data: response });
+  try {
+    if (req.query.email) {
+      const response = await getPatientByEmail(req.query.email);
+      return res.json({ success: true, data: response });
+    }
+    res.json({ success: false, data: 'invalid input somehow' });
+  } catch (error) {
+    res.status(400)
+    res.json({success: false, message: 'error accessing patient by email'})
   }
-  res.json({ success: false, data: 'invalid input somehow' });
+  next()
 });
 
 router.patch('/patient/:email', async function (req, res, next) {
-  const response = await updatePatientPrepaid(
-    req.params.email,
-    req.body.prepaid
-  );
-  return res.json({ success: true, data: response });
+  try {
+    const response = await updatePatientPrepaid(
+      req.params.email,
+      req.body.prepaid
+    );
+    return res.json({ success: true, data: response });
+  } catch (error) {
+    res.status(400)
+    res.json({success: false, message: 'error updating patient by email'})
+  }
+  next()
 });
 
 //routes for pending prescriptions
 router.get('/pending', async function (req, res, next) {
-  const response = await getPending();
-  res.json({ success: true, data: response });
+  try {
+    const response = await getPending();
+    res.json({ success: true, data: response });
+  } catch (error) {
+    res.status(400)
+    res.json({success: false, message: 'error accessing pending prescriptions'})
+  }
+  next()
 });
 
 router.delete('/pending/:id', async function (req, res, next) {
-  const response = await deletePending(Number(req.params.id));
-  res.json({ success: true, data: response });
+  try {
+    const response = await deletePending(Number(req.params.id));
+    res.json({ success: true, data: response });
+  } catch (error) {
+    res.status(400)
+    res.json({success: false, message: 'error deleting pending prescriptions by id'})
+  }
+  next()
 });
 export default router;

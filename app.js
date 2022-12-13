@@ -9,7 +9,7 @@ import usersRouter from './routes/users.js';
 import express from 'express';
 import cors from 'cors';
 const app = express();
-const PORT = 3001;
+const PORT =`0.0.0.0:$PORT`;
 // app.use('/', indexRouter);
 
 app.use(cors());
@@ -17,7 +17,7 @@ app.use(logger('dev'));
 
 app.use(express.json());
 app.use('/', usersRouter);
-// app.listen(PORT);
+app.listen(PORT);
 
 app.get('/users/:id', (req, res) => {
   //payload will be query on all of the notes of the user based on req.params.id
